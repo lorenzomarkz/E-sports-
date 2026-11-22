@@ -1,0 +1,39 @@
+<mat-card appearance="outlined" style="margin-top:24px">
+ <mat-card-header><mat-card-title>Estatísticas individuais — partida #{{ partida.id }}</mat-card-title></mat-card-header>
+ <mat-card-content>
+ <p class="ajuda">Selecione um atleta de uma das equipes participantes. Um registro por atleta e partida.</p>
+ @if (!tipo) { <p class="aviso">O registro específico para esta modalidade ficará para uma etapa posterior.</p> }
+ @if (auth.organizador && tipo) {
+ <form [formGroup]="formulario" (ngSubmit)="salvar()">
+  <div class="form-grid">
+   <mat-form-field appearance="outline"><mat-label>Atleta</mat-label><mat-select formControlName="atletaId">
+    @for (atleta of atletas; track atleta.id) {<mat-option [value]="atleta.id">{{ atleta.nome }}</mat-option>}
+    @empty {<mat-option disabled>Nenhum atleta associado às equipes aprovadas nesta competição</mat-option>}
+   </mat-select><mat-error>Selecione o atleta.</mat-error></mat-form-field>
+   @if(tipo==='gols'){<mat-form-field appearance="outline"><mat-label>Gols</mat-label><input matInput type="number" min="0" step="1" formControlName="gols"><mat-error>Informe um inteiro não negativo.</mat-error></mat-form-field>}
+   @if(tipo==='pontos'){<mat-form-field appearance="outline"><mat-label>Pontos</mat-label><input matInput type="number" min="0" step="1" formControlName="pontos"><mat-error>Informe um inteiro não negativo.</mat-error></mat-form-field>}
+   @if(tipo==='jogos'){
+    <mat-form-field appearance="outline"><mat-label>Abates</mat-label><input matInput type="number" min="0" step="1" formControlName="abates"><mat-error>Informe um inteiro não negativo.</mat-error></mat-form-field>
+   }
+   @if(permiteAssistencias){
+    <mat-form-field appearance="outline"><mat-label>Assistências</mat-label><input matInput type="number" min="0" step="1" formControlName="assistencias"><mat-error>Informe um inteiro não negativo.</mat-error></mat-form-field>
+   }
+  </div>
+  <button mat-flat-button type="submit" [disabled]="ocupado">Registrar estatística</button>
+ </form>
+ }
+ @if(mensagem){<p class="aviso" role="status">{{ mensagem }}</p>}
+ <div class="tabela-scroll">
+ <table mat-table [dataSource]="registros">
+  <ng-container matColumnDef="atleta"><th mat-header-cell *matHeaderCellDef>Atleta</th><td mat-cell *matCellDef="let r">{{ r.atletaNome || nome(r.atletaId) }} @if(!r.participacaoId){<span class="ajuda"> — Registro antigo, sem participação associada</span>}</td></ng-container>
+  <ng-container matColumnDef="gols"><th mat-header-cell *matHeaderCellDef>Gols</th><td mat-cell *matCellDef="let r">{{ r.gols ?? '—' }}</td></ng-container>
+  <ng-container matColumnDef="pontos"><th mat-header-cell *matHeaderCellDef>Pontos</th><td mat-cell *matCellDef="let r">{{ r.pontos ?? '—' }}</td></ng-container>
+  <ng-container matColumnDef="abates"><th mat-header-cell *matHeaderCellDef>Abates</th><td mat-cell *matCellDef="let r">{{ r.abates ?? '—' }}</td></ng-container>
+  <ng-container matColumnDef="assistencias"><th mat-header-cell *matHeaderCellDef>Assistências</th><td mat-cell *matCellDef="let r">{{ r.assistencias ?? '—' }}</td></ng-container>
+  <ng-container matColumnDef="acoes"><th mat-header-cell *matHeaderCellDef>Ações</th><td mat-cell *matCellDef="let r">@if(auth.organizador){<button mat-button [disabled]="ocupado" (click)="excluir(r)">Excluir</button>}</td></ng-container>
+  <tr mat-header-row *matHeaderRowDef="colunas"></tr><tr mat-row *matRowDef="let r; columns:colunas"></tr>
+  <tr *matNoDataRow><td [attr.colspan]="colunas.length" class="vazio">Nenhuma estatística cadastrada.</td></tr>
+ </table>
+ </div>
+ </mat-card-content>
+</mat-card>

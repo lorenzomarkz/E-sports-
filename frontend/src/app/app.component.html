@@ -1,0 +1,38 @@
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<mat-sidenav-container class="estrutura">
+ <mat-sidenav id="menu-principal" [mode]="celular ? 'over' : 'side'" [(opened)]="menuAberto" class="menu" aria-label="Menu principal">
+  <a routerLink="/dashboard" class="marca" (click)="navegar()" aria-label="Ir ao Dashboard"><img src="/e-sports-logo.png" alt="E-sports" width="180" height="90"></a>
+  <nav aria-label="Páginas">
+   @for (link of links; track link.rota) {
+    <a [routerLink]="link.rota" routerLinkActive="ativo" ariaCurrentWhenActive="page" (click)="navegar()">{{ link.titulo }}</a>
+   }
+  </nav>
+ </mat-sidenav>
+ <mat-sidenav-content>
+  <mat-toolbar class="cabecalho">
+   <button mat-button class="botao-menu" (click)="menuAberto = !menuAberto" [attr.aria-expanded]="menuAberto" aria-controls="menu-principal" aria-label="Alternar menu">☰</button>
+   <div><h1>{{ titulo }}</h1></div>
+   <div class="acesso">
+   @if (auth.usuario) { <span class="usuario">{{ auth.usuario }}</span><button mat-stroked-button (click)="auth.sair()">Sair</button> }
+   @else { <button mat-stroked-button (click)="mostrarLogin = !mostrarLogin">Entrar</button> }
+   </div>
+  </mat-toolbar>
+  <main id="conteudo" tabindex="-1">
+   @if (mostrarLogin && !auth.usuario) {
+    <mat-card class="login-card" appearance="outlined">
+     <mat-card-header><mat-card-title>Acessar o sistema</mat-card-title></mat-card-header>
+     <mat-card-content>
+      <p>Entre com seu usuário e senha. Ao recarregar a página, entre novamente.</p>
+      <form [formGroup]="login" (ngSubmit)="entrar()" class="form-grid">
+       <mat-form-field appearance="outline"><mat-label>Usuário</mat-label><input matInput formControlName="usuario" autocomplete="username"><mat-error>Informe o usuário.</mat-error></mat-form-field>
+       <mat-form-field appearance="outline"><mat-label>Senha</mat-label><input matInput type="password" formControlName="senha" autocomplete="current-password"><mat-error>Informe a senha.</mat-error></mat-form-field>
+       <div class="acoes-form"><button mat-flat-button type="submit" [disabled]="entrando">Entrar</button><button mat-button type="button" (click)="fecharLogin()" [disabled]="entrando">Cancelar</button></div>
+      </form>
+      @if (erroLogin) { <p role="alert" class="aviso">{{ erroLogin }}</p> }
+     </mat-card-content>
+    </mat-card>
+   }
+   <router-outlet />
+  </main>
+ </mat-sidenav-content>
+</mat-sidenav-container>

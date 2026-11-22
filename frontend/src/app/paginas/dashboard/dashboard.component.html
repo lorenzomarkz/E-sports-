@@ -1,0 +1,44 @@
+<div class="dashboard"><h2>Competições e resultados</h2><section class="indicadores" aria-label="Indicadores do sistema" [attr.aria-busy]="carregandoIndicadores">
+ <div class="indicador"><span>Competições ativas</span><strong>{{indicadores?.competicoesAtivas ?? '—'}}</strong><small>Dentro do período cadastrado</small></div>
+ <div class="indicador"><span>Equipes inscritas em competições</span><strong>{{indicadores?.equipesInscritas ?? '—'}}</strong><small>Equipes únicas com inscrição aprovada</small></div>
+ <div class="indicador"><span>Partidas realizadas</span><strong>{{indicadores?.partidasRealizadas ?? '—'}}</strong><small>Partidas finalizadas</small></div>
+</section>
+<div class="atualizacao-indicadores">
+ <span role="status">{{erroIndicadores || (carregandoIndicadores ? 'Atualizando indicadores…' : 'Atualização automática a cada 30 segundos.')}}</span>
+ <button mat-button (click)="atualizarIndicadores()" [disabled]="carregandoIndicadores">Atualizar indicadores</button>
+</div>
+<div class="colunas-dashboard"><div class="coluna">   <mat-card appearance="outlined">
+    <mat-card-header><mat-card-title>Classificação</mat-card-title></mat-card-header>
+    <mat-card-content>
+     @if(competicoes.length){
+      <mat-form-field appearance="outline"><mat-label>Competição</mat-label><mat-select [formControl]="selecao">
+       @for(t of competicoes;track t.id){<mat-option [value]="t.id">{{t.nome}}</mat-option>}
+      </mat-select></mat-form-field>
+      @if(carregandoClassificacao){<p class="sem-dados">Carregando…</p>}
+      @else if(erroClassificacao){<p role="alert" class="sem-dados">{{erroClassificacao}}</p>}
+      @else if(classificacao){
+       @if(classificacao.disponivel && classificacao.classificacao.length){
+        <div class="tabela-scroll"><table class="resumo-classificacao"><thead><tr><th>Equipe</th><th>V</th><th>E</th><th>D</th><th>Pontos</th></tr></thead><tbody>
+         @for(l of classificacao.classificacao.slice(0,5);track l.equipeId){<tr><td><app-escudo [codigo]="l.escudo" [corEscudo]="l.corEscudo" />{{l.equipe}}</td><td>{{l.vitorias}}</td><td>{{l.empates}}</td><td>{{l.derrotas}}</td><td>{{l.pontos ?? '—'}}</td></tr>}
+        </tbody></table></div>
+        <p class="legenda">V: vitórias · E: empates · D: derrotas</p>
+       } @else {<p class="sem-dados">{{classificacao.disponivel ? 'Nenhuma classificação disponível.' : classificacao.regra}}</p>}
+       <a mat-button [routerLink]="auth.usuario === 'CONSULTA' ? '/competicoes' : '/classificacao'" [queryParams]="{torneioId:selecao.value}">Ver classificação completa</a>
+      } @else {<p class="sem-dados">Selecione uma competição.</p>}
+     } @else {<p class="sem-dados">{{totalTorneios === null ? (erroTorneios || 'Carregando…') : 'Nenhuma competição disponível.'}}</p>}
+    </mat-card-content>
+   </mat-card></div><div class="coluna">   <mat-card appearance="outlined">
+    <mat-card-header><mat-card-title>Próximas partidas</mat-card-title><a mat-button routerLink="/partidas">Ver partidas</a></mat-card-header>
+    <mat-card-content>
+     @for(p of proximas;track p.id){
+      <div class="linha-jogo"><div><strong><app-escudo [codigo]="p.equipeAEscudo" [corEscudo]="p.equipeACorEscudo" />{{p.equipeANome || "Equipe não disponível"}} × <app-escudo [codigo]="p.equipeBEscudo" [corEscudo]="p.equipeBCorEscudo" />{{p.equipeBNome || "Equipe não disponível"}}</strong><span>{{nomeCompeticao(p.torneioId)}}</span></div><time>{{p.dataHora | date:'dd/MM/yyyy'}}<span>{{p.dataHora | date:'HH:mm'}}</span></time></div>
+     } @empty {<p class="sem-dados">{{totalPartidas === null ? (erroPartidas || 'Carregando…') : 'Nenhuma partida agendada.'}}</p>}
+    </mat-card-content>
+   </mat-card></div></div>@if(resultados.length){   <mat-card appearance="outlined">
+    <mat-card-header><mat-card-title>Últimos resultados</mat-card-title><a mat-button routerLink="/partidas">Ver resultados</a></mat-card-header>
+    <mat-card-content>
+     @for(p of resultados;track p.id){
+      <div class="linha-jogo"><div><strong><app-escudo [codigo]="p.equipeAEscudo" [corEscudo]="p.equipeACorEscudo" />{{p.equipeANome || "Equipe não disponível"}} × <app-escudo [codigo]="p.equipeBEscudo" [corEscudo]="p.equipeBCorEscudo" />{{p.equipeBNome || "Equipe não disponível"}}</strong><span>{{nomeCompeticao(p.torneioId)}} · {{p.dataHora | date:'dd/MM/yyyy'}}</span></div><b class="placar">{{p.placarEquipeA ?? '—'}} × {{p.placarEquipeB ?? '—'}}</b></div>
+     } @empty {<p class="sem-dados">{{totalPartidas === null ? (erroPartidas || 'Carregando…') : 'Nenhum resultado registrado.'}}</p>}
+    </mat-card-content>
+   </mat-card>}</div>

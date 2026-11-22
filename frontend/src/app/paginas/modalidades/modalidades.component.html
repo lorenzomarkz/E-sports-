@@ -1,0 +1,61 @@
+<div class="pagina">
+  <div class="pagina-intro">
+    <div><h2>Modalidades</h2></div>
+  </div>
+
+  <mat-card appearance="outlined">
+    <mat-card-header><mat-card-title>{{ consultando ? 'Consultar modalidade' : (idEmEdicao !== null ? 'Editar modalidade' : 'Cadastrar modalidade') }}</mat-card-title></mat-card-header>
+    <mat-card-content>
+      @if (!auth.organizador) { <p class="ajuda">Entre como organizador para cadastrar, editar ou excluir.</p> }
+      <form [formGroup]="formulario" (ngSubmit)="salvar()">
+        <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Nome</mat-label>
+        <input matInput type="text" formControlName="nome">
+        <mat-error>Preencha nome corretamente.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="campo-largo">
+        <mat-label>Descrição</mat-label>
+        <textarea matInput formControlName="descricao" rows="3"></textarea>
+        <mat-error>Preencha descrição corretamente.</mat-error>
+      </mat-form-field>
+        </div>
+        <div class="acoes-form">
+          @if (!consultando && auth.organizador) { <button mat-flat-button type="submit" [disabled]="ocupado">{{ idEmEdicao !== null ? 'Salvar alterações' : 'Cadastrar' }}</button> }
+          <button mat-stroked-button type="button" (click)="cancelar()" [disabled]="ocupado">{{ idEmEdicao !== null ? 'Cancelar' : 'Limpar formulário' }}</button>
+        </div>
+      </form>
+      @if (mensagem) { <p class="aviso" role="status">{{ mensagem }}</p> }
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined">
+    <mat-card-header><mat-card-title>Lista de modalidades</mat-card-title></mat-card-header>
+    <mat-card-content>
+      <div class="tabela-scroll" tabindex="0" aria-label="Tabela de modalidades">
+        <table mat-table [dataSource]="registros">
+          <ng-container matColumnDef="nome">
+            <th mat-header-cell *matHeaderCellDef>Nome</th>
+            <td mat-cell *matCellDef="let registro">{{ registro.nome }}</td>
+          </ng-container>
+          <ng-container matColumnDef="descricao">
+            <th mat-header-cell *matHeaderCellDef>Descrição</th>
+            <td mat-cell *matCellDef="let registro">{{ registro.descricao }}</td>
+          </ng-container>
+          <ng-container matColumnDef="acoes">
+            <th mat-header-cell *matHeaderCellDef>Ações</th>
+            <td mat-cell *matCellDef="let registro" class="acoes-tabela">
+              <button mat-button (click)="consultar(registro)">Consultar</button>
+              @if (auth.organizador) { <button mat-button [disabled]="ocupado" (click)="editar(registro)">Editar</button> }
+              @if (auth.organizador) { <button mat-button class="excluir" [disabled]="ocupado" (click)="excluir(registro)">Excluir</button> }
+
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+          <tr mat-row *matRowDef="let registro; columns: colunas;"></tr>
+          <tr class="mat-row" *matNoDataRow><td class="vazio" [attr.colspan]="colunas.length">{{ carregando ? "Carregando…" : (falhouLista ? "Não foi possível carregar a lista." : "Nenhum registro encontrado.") }}</td></tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

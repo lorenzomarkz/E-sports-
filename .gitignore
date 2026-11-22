@@ -1,0 +1,76 @@
+# Dependências e artefatos gerados
+node_modules/
+target/
+dist/
+build/
+out-tsc/
+.angular/
+coverage/
+.nyc_output/
+
+# Logs e arquivos temporários
+*.log
+logs/
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+tmp/
+temp/
+.cache/
+__pycache__/
+*.pyc
+hs_err_pid*
+replay_pid*
+
+# Credenciais e configuração local (somente modelos vazios podem ser publicados)
+.env
+.env.*
+!.env.example
+!.env.sample
+*.env
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+credentials.json
+service-account*.json
+application-local.properties
+application-local.yml
+application-local.yaml
+settings.xml
+.npmrc
+.netrc
+
+# Backups e exportações de banco: não publicar dados reais
+*.sql
+*.sql.*
+*.dump
+backups/
+backup/
+dumps/
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+
+# Configuração pessoal de editores e ferramentas
+.vscode/
+.idea/
+.settings/
+.classpath
+.project
+*.iml
+*.code-workspace
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Ambiente legado do professor: contém configuração fixa de acesso ao MySQL.
+# Preservado localmente, não faz parte das instruções de execução do E-sports.
+/ecommerce-backend-4a-main/ecommerce-backend-4a-main/.devcontainer/

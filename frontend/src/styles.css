@@ -1,0 +1,76 @@
+html {
+ color-scheme:dark;
+ --mat-sys-primary:#7ED957; --mat-sys-on-primary:#0B1210;
+ --mat-sys-primary-container:#2D6A4F; --mat-sys-on-primary-container:#EAF4EE;
+ --mat-sys-secondary:#7ED957; --mat-sys-secondary-container:#1E2A25; --mat-sys-on-secondary-container:#EAF4EE;
+ --mat-sys-surface:#111A17; --mat-sys-background:#0B1210;
+ --mat-sys-surface-container:#111A17; --mat-sys-surface-container-low:#111A17;
+ --mat-sys-surface-container-high:#1E2A25; --mat-sys-surface-container-highest:#1E2A25;
+ --mat-sys-on-surface:#EAF4EE; --mat-sys-on-background:#EAF4EE;
+ --mat-sys-on-surface-variant:#A7B5AD; --mat-sys-outline:#61756A; --mat-sys-outline-variant:#1E2A25;
+ --mat-sys-error:#FFB4AB;
+ --mat-sys-body-medium-font:Arial,sans-serif; --mat-sys-body-large-font:Arial,sans-serif; --mat-sys-title-large-font:Arial,sans-serif;
+}
+body { margin:0; background:#0B1210; color:#EAF4EE; font-family:Arial,sans-serif; }
+*, *::before, *::after { box-sizing:border-box; }
+:focus-visible { outline:2px solid #7ED957; outline-offset:3px; }
+.pagina { display:grid; gap:20px; min-width:0; }
+.pagina > * { min-width:0; }
+.pagina-intro { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+h2 { font-size:22px; margin:0 0 10px; font-weight:600; }
+.pagina-intro p, .ajuda { color:#A7B5AD; font-size:14px; line-height:1.6; }
+.pagina-intro p:last-child { margin-bottom:0; }
+.mat-mdc-card { --mdc-outlined-card-container-color:#111A17; --mdc-outlined-card-outline-color:#1E2A25; border-radius:4px !important; box-shadow:none !important; }
+.mat-mdc-card-header { padding:18px 20px 6px !important; }
+.mat-mdc-card-title { font-size:17px !important; font-weight:600 !important; }
+.mat-mdc-card-content { padding:14px 20px 20px !important; }
+.ajuda { margin:0 0 16px; }
+.form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px 20px; }
+mat-form-field { width:100%; min-width:0; }
+.campo-largo { grid-column:1 / -1; }
+.acoes-form { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
+.aviso { padding:14px 16px; border-left:3px solid #7ED957; background:#192B20; color:#EAF4EE; font-size:13px; line-height:1.6; margin-bottom:0; }
+.tabela-scroll { width:100%; overflow-x:auto; }
+table { width:100%; }
+.mat-mdc-table { background:transparent !important; }
+.mat-mdc-header-cell { color:#A7B5AD !important; font-size:12px !important; white-space:nowrap; }
+.mat-mdc-cell, .mat-mdc-header-cell { border-bottom-color:#1E2A25 !important; }
+.acoes-tabela { white-space:nowrap; }
+.excluir { --mat-button-text-label-text-color:#FFB4AB; }
+.vazio { padding:24px 16px; text-align:center; color:#EAF4EE; line-height:1.8; font-size:14px; }
+.vazio span, .legenda { color:#A7B5AD; font-size:12px; }
+.indicadores { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+.indicadores .mat-mdc-card-content { padding-top:24px !important; }
+.indicadores p { margin-top:0; color:#A7B5AD; font-size:14px; }
+.numero { display:block; color:#7ED957; font-size:32px; margin:10px 0; }
+.indicadores a { margin-left:-12px; }
+.resumo-partidas { display:grid; grid-template-columns:1fr 1fr; border:1px solid #1E2A25; border-radius:6px; }
+.resumo-partidas div { padding:20px; display:flex; align-items:center; justify-content:space-between; gap:10px; color:#A7B5AD; }
+.resumo-partidas div + div { border-left:1px solid #1E2A25; }
+.resumo-partidas strong { color:#7ED957; font-size:24px; }
+@media(max-width:700px) {
+ .form-grid, .indicadores { grid-template-columns:1fr; }
+ .pagina-intro { align-items:flex-start; flex-direction:column; }
+ .mat-mdc-card-header { padding:18px 16px 8px !important; }
+ .mat-mdc-card-content { padding:12px 16px 20px !important; }
+ .resumo-partidas div { padding:14px; font-size:12px; }
+}
+
+/* Fonte local uniforme, inclusive nos tokens de tipografia do Material. */
+html {
+ --mat-sys-label-large-font: Arial, sans-serif;
+ --mat-sys-label-medium-font: Arial, sans-serif;
+ --mat-sys-label-small-font: Arial, sans-serif;
+ --mat-sys-body-small-font: Arial, sans-serif;
+ --mat-sys-title-medium-font: Arial, sans-serif;
+ --mat-sys-title-small-font: Arial, sans-serif;
+}
+button, input, textarea, select, table,
+.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-outlined-button,
+.mat-mdc-form-field, .mat-mdc-select, .mat-mdc-option, .mat-mdc-table {
+ font-family: Arial, sans-serif;
+}
+
+.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-outlined-button { border-radius:4px !important; min-height:40px; font-size:14px; letter-spacing:normal; }
+.mat-mdc-cell { font-size:14px; }
+.legenda:empty { display:none; }

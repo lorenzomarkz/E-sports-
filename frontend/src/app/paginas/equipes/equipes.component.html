@@ -1,0 +1,111 @@
+<div class="pagina">
+  <div class="pagina-intro">
+    <div><h2>Equipes</h2></div>
+  </div>
+
+  @if (auth.organizador) {
+  <mat-card appearance="outlined">
+    <mat-card-header><mat-card-title>{{ consultando ? 'Consultar equipe' : (idEmEdicao !== null ? 'Editar equipe' : 'Cadastrar equipe') }}</mat-card-title></mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="formulario" (ngSubmit)="salvar()">
+        <div class="form-grid">
+ <mat-form-field appearance="outline"><mat-label>Cor do escudo</mat-label>
+  <mat-select formControlName="corEscudo">
+   @for(c of coresEscudo;track c.valor){<mat-option [value]="c.valor"><app-escudo [corEscudo]="c.valor" />{{c.nome}}</mat-option>}
+  </mat-select><mat-error>Selecione uma cor.</mat-error>
+ </mat-form-field>
+ <div class="campo-largo" role="status" aria-label="Prévia do escudo">
+  @if(formulario.controls.corEscudo.value){
+   <p>Prévia: <app-escudo [corEscudo]="formulario.controls.corEscudo.value" />{{formulario.controls.nome.value || 'Equipe'}}</p>
+  }
+ </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Nome</mat-label>
+        <input matInput type="text" formControlName="nome">
+        <mat-error>Preencha nome corretamente.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Cidade</mat-label>
+        <input matInput type="text" formControlName="cidade">
+        <mat-error>Preencha cidade corretamente.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Representante</mat-label>
+        <input matInput type="text" formControlName="nomeResponsavel">
+        <mat-error>Preencha representante corretamente.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Modalidade</mat-label>
+        <mat-select formControlName="modalidadeId">
+          @for (opcao of modalidades; track opcao.id) {
+            <mat-option [value]="opcao.id">{{ opcao.nome }}</mat-option>
+          } @empty {
+            <mat-option disabled>Nenhuma opção disponível</mat-option>
+          }
+        </mat-select>
+        <mat-error>Preencha modalidade corretamente.</mat-error>
+      </mat-form-field>
+        </div>
+        <div class="acoes-form">
+          @if (!consultando && auth.organizador) { <button mat-flat-button type="submit" [disabled]="ocupado">{{ idEmEdicao !== null ? 'Salvar alterações' : 'Cadastrar' }}</button> }
+          <button mat-stroked-button type="button" (click)="cancelar()" [disabled]="ocupado">{{ idEmEdicao !== null ? 'Cancelar' : 'Limpar formulário' }}</button>
+        </div>
+      </form>
+      @if (mensagem) { <p class="aviso" role="status">{{ mensagem }}</p> }
+    </mat-card-content>
+  </mat-card>
+  }
+
+  <mat-card appearance="outlined">
+    <mat-card-header><mat-card-title>Lista de equipes</mat-card-title></mat-card-header>
+    <mat-card-content>
+      @if (!auth.organizador && mensagem) { <p class="aviso" role="status">{{ mensagem }}</p> }
+      @if(auth.organizador){
+       <mat-form-field appearance="outline"><mat-label>Competição para inscrição</mat-label><mat-select [formControl]="competicaoInscricao">
+        @for(t of competicoes;track t.id){<mat-option [value]="t.id">{{t.nome}}</mat-option>}
+        @empty{<mat-option disabled>Nenhuma competição disponível</mat-option>}
+       </mat-select></mat-form-field>
+      }
+      <div class="tabela-scroll" tabindex="0" aria-label="Tabela de equipes">
+        <table mat-table [dataSource]="registros">
+          <ng-container matColumnDef="nome">
+            <th mat-header-cell *matHeaderCellDef>Nome</th>
+            <td mat-cell *matCellDef="let registro"><app-escudo [codigo]="registro.escudo" [corEscudo]="registro.corEscudo" />{{ registro.nome }}</td>
+          </ng-container>
+          <ng-container matColumnDef="cidade">
+            <th mat-header-cell *matHeaderCellDef>Cidade</th>
+            <td mat-cell *matCellDef="let registro">{{ registro.cidade }}</td>
+          </ng-container>
+          <ng-container matColumnDef="nomeResponsavel">
+            <th mat-header-cell *matHeaderCellDef>Representante</th>
+            <td mat-cell *matCellDef="let registro">{{ registro.nomeResponsavel }}</td>
+          </ng-container>
+          <ng-container matColumnDef="modalidadeId">
+            <th mat-header-cell *matHeaderCellDef>Modalidade</th>
+            <td mat-cell *matCellDef="let registro">{{ nomeRelacionado(modalidades, registro.modalidadeId) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="acoes">
+            <th mat-header-cell *matHeaderCellDef>Ações</th>
+            <td mat-cell *matCellDef="let registro" class="acoes-tabela">
+              @if (auth.organizador) { <button mat-button (click)="consultar(registro)">Consultar</button> }
+  @if(auth.organizador && competicaoSelecionada){
+  @if(registro.modalidadeId === competicaoSelecionada.modalidadeId){
+   @if(estadoInscricao(registro.id)==='Solicitar inscrição'){
+    <a mat-button routerLink="/inscricoes" [queryParams]="{equipeId:registro.id,torneioId:competicaoInscricao.value}">Solicitar inscrição</a>
+   } @else {<span role="status">{{estadoInscricao(registro.id)}}</span>}
+  } @else {<span class="legenda">Modalidade incompatível</span>}
+ }
+              @if (auth.organizador) { <button mat-button [disabled]="ocupado" (click)="editar(registro)">Editar</button> }
+              @if (auth.organizador) { <button mat-button class="excluir" [disabled]="ocupado" (click)="excluir(registro)">Excluir</button> }
+
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+          <tr mat-row *matRowDef="let registro; columns: colunas;"></tr>
+          <tr class="mat-row" *matNoDataRow><td class="vazio" [attr.colspan]="colunas.length">{{ carregando ? "Carregando…" : (falhouLista ? "Não foi possível carregar a lista." : "Nenhum registro encontrado.") }}</td></tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

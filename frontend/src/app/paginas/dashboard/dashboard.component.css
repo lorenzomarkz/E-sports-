@@ -1,0 +1,33 @@
+.dashboard { display:grid; gap:16px; min-width:0; }
+h2 { font-size:22px; margin:0; }
+.colunas-dashboard { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; align-items:start; }
+.coluna { display:grid; gap:16px; min-width:0; }
+mat-card { min-width:0; }
+mat-card-header { align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+mat-card-title { font-size:16px !important; }
+mat-card-header a { margin-left:auto; }
+.linha-jogo { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #1E2A25; font-size:14px; }
+.linha-jogo:last-child, .linha-competicao:last-child { border-bottom:0; }
+.linha-jogo strong { font-weight:500; overflow-wrap:anywhere; }
+.linha-jogo span, .linha-competicao span { display:block; color:#A7B5AD; font-size:12px; margin-top:5px; }
+time { flex-shrink:0; text-align:right; color:#A7B5AD; font-size:12px; }
+.placar { color:#7ED957; white-space:nowrap; font-size:16px; }
+.linha-competicao { padding:10px 0; border-bottom:1px solid #1E2A25; font-size:14px; }
+.linha-competicao a { color:#EAF4EE; text-decoration:none; }
+.linha-competicao a:hover { color:#7ED957; text-decoration:underline; }
+.sem-dados { color:#A7B5AD; font-size:14px; line-height:1.5; margin:4px 0; }
+.avisos p { color:#A7B5AD; font-size:13px; margin:0; }
+.resumo-classificacao { border-collapse:collapse; font-size:13px; }
+.resumo-classificacao th, .resumo-classificacao td { padding:8px 6px; text-align:center; border-bottom:1px solid #1E2A25; }
+.resumo-classificacao th { color:#A7B5AD; font-weight:500; }
+.resumo-classificacao th:first-child, .resumo-classificacao td:first-child { text-align:left; }
+@media(max-width:1000px) { .colunas-dashboard { grid-template-columns:1fr; } }
+
+
+.indicadores { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.indicador { display:grid; grid-template-columns:1fr auto; align-items:center; gap:4px 12px; padding:12px 14px; background:#111A17; border:1px solid #1E2A25; border-radius:4px; min-width:0; }
+.indicador span { font-size:14px; color:#EAF4EE; }
+.indicador strong { font-size:24px; font-weight:600; color:#7ED957; font-variant-numeric:tabular-nums; }
+.indicador small { grid-column:1 / -1; color:#A7B5AD; font-size:12px; }
+.atualizacao-indicadores { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 12px; margin-top:-10px; color:#A7B5AD; font-size:12px; }
+@media(max-width:650px) { .indicadores { grid-template-columns:1fr; gap:8px; } .indicador { padding:8px 12px; } }

@@ -1,0 +1,28 @@
+.estrutura { min-height:100dvh; background:#0B1210; }
+.menu { width:246px; background:#111A17; border-right:1px solid #1E2A25; border-radius:0; }
+.marca { display:flex; justify-content:center; padding:24px 20px 12px; }
+
+nav { padding:0 14px; display:grid; gap:6px; }
+nav a { display:flex; align-items:center; gap:14px; padding:12px 16px; border-radius:4px; color:#A7B5AD; text-decoration:none; border:1px solid transparent; font-size:14px; }
+nav a:hover { background:#1E2A25; color:#EAF4EE; }
+nav a.ativo { color:#7ED957; background:#192B20; border-color:#2D6A4F; }
+.cabecalho { height:72px; padding:0 24px; gap:16px; background:#0B1210; border-bottom:1px solid #1E2A25; color:#EAF4EE; }
+h1 { font-size:20px; font-weight:600; margin:0; line-height:1.5; }
+.botao-menu { display:none; min-width:40px; font-size:22px; }
+main { padding:24px 24px 32px; max-width:1500px; margin:auto; }
+.pular { position:fixed; top:-100px; left:16px; z-index:999; background:#7ED957; color:#0B1210; padding:12px; }
+.pular:focus { top:12px; }
+@media(max-width:899px) {
+ .botao-menu { display:inline-flex; }
+ .cabecalho { height:64px; padding:0 16px; }
+ main { padding:20px 16px; }
+
+}
+
+.acesso { margin-left:auto; display:flex; align-items:center; gap:12px; }
+.usuario { font-size:12px; }
+.login-card { margin-bottom:24px; }
+.marca img { width:190px; height:100px; object-fit:contain; }
+@media(max-width:600px) { .usuario { display:none; } }
+
+@media(max-width:420px) { .cabecalho { gap:8px; padding:0 8px; } h1 { font-size:16px; white-space:normal; line-height:1.2; } }

@@ -1,0 +1,141 @@
+<div class="pagina">
+  <div class="pagina-intro">
+    <div><h2>Partidas</h2></div>
+  </div>
+
+  @if (auth.organizador) {
+  <mat-card appearance="outlined">
+    <mat-card-header><mat-card-title>{{ consultando ? 'Consultar partida' : (idEmEdicao !== null ? 'Editar partida' : 'Cadastrar partida') }}</mat-card-title></mat-card-header>
+    <mat-card-content>
+      @if (rotulo === 'Sets vencidos') { <p class="ajuda">Vôlei: melhor de cinco sets. Para finalizar, a vencedora deve ter 3 sets e a adversária, de 0 a 2.</p> }
+      <form [formGroup]="formulario" (ngSubmit)="salvar()">
+        <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Torneio</mat-label>
+        <mat-select formControlName="torneioId">
+          @for (opcao of torneios; track opcao.id) {
+            <mat-option [value]="opcao.id">{{ opcao.nome }}</mat-option>
+          } @empty {
+            <mat-option disabled>Nenhuma opção disponível</mat-option>
+          }
+        </mat-select>
+        <mat-error>Preencha torneio corretamente.</mat-error>
+      </mat-form-field>
+      @if (freeFire) {
+        <p class="aviso campo-largo">Free Fire pode envolver várias equipes. O registro de classificação e pontos será implementado em uma etapa posterior; não é utilizado confronto entre duas equipes.</p>
+      } @else {
+      <mat-form-field appearance="outline">
+        <mat-label>Equipe A</mat-label>
+        <mat-select formControlName="equipeAId">
+          @for (opcao of equipesAprovadas; track opcao.id) {
+            <mat-option [value]="opcao.id">{{ opcao.nome }}</mat-option>
+          } @empty {
+            <mat-option disabled>Nenhuma equipe aprovada nesta competição</mat-option>
+          }
+        </mat-select>
+        <mat-error>Preencha equipe a corretamente.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Equipe B</mat-label>
+        <mat-select formControlName="equipeBId">
+          @for (opcao of equipesAprovadas; track opcao.id) {
+            <mat-option [value]="opcao.id">{{ opcao.nome }}</mat-option>
+          } @empty {
+            <mat-option disabled>Nenhuma equipe aprovada nesta competição</mat-option>
+          }
+        </mat-select>
+        <mat-error>Preencha equipe b corretamente.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Data e horário</mat-label>
+        <input matInput type="datetime-local" formControlName="dataHora">
+        <mat-error>Preencha data e horário corretamente.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Local</mat-label>
+        <input matInput type="text" formControlName="local">
+        <mat-error>Preencha local corretamente.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ rotulo }} — equipe A</mat-label>
+        <input matInput type="number" formControlName="placarEquipeA" min="0" step="1">
+        <mat-error>Informe um número inteiro válido.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ rotulo }} — equipe B</mat-label>
+        <input matInput type="number" formControlName="placarEquipeB" min="0" step="1">
+        <mat-error>Informe um número inteiro válido.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="AGENDADA">AGENDADA</mat-option>
+          <mat-option value="EM_ANDAMENTO">EM ANDAMENTO</mat-option>
+          <mat-option value="FINALIZADA">FINALIZADA</mat-option>
+        </mat-select>
+        <mat-error>Preencha status corretamente.</mat-error>
+      </mat-form-field>
+        }
+        </div>
+        <div class="acoes-form">
+          @if (!consultando && auth.organizador) { <button mat-flat-button type="submit" [disabled]="ocupado || freeFire || carregandoEquipes">{{ idEmEdicao !== null ? 'Salvar alterações' : 'Cadastrar' }}</button> }
+          <button mat-stroked-button type="button" (click)="cancelar()" [disabled]="ocupado">{{ idEmEdicao !== null ? 'Cancelar' : 'Limpar formulário' }}</button>
+        </div>
+      </form>
+      @if (mensagem) { <p class="aviso" role="status">{{ mensagem }}</p> }
+    </mat-card-content>
+  </mat-card>
+  }
+
+  <mat-card appearance="outlined">
+    <mat-card-header><mat-card-title>Lista de partidas</mat-card-title></mat-card-header>
+    <mat-card-content>
+      @if (!auth.organizador && mensagem) { <p class="aviso" role="status">{{ mensagem }}</p> }
+      <div class="tabela-scroll" tabindex="0" aria-label="Tabela de partidas">
+        <table mat-table [dataSource]="registros">
+          <ng-container matColumnDef="torneioId">
+            <th mat-header-cell *matHeaderCellDef>Torneio</th>
+            <td mat-cell *matCellDef="let registro">{{ nomeRelacionado(torneios, registro.torneioId) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="equipeAId">
+            <th mat-header-cell *matHeaderCellDef>Equipe A</th>
+            <td mat-cell *matCellDef="let registro"><app-escudo [codigo]="registro.equipeAEscudo" [corEscudo]="registro.equipeACorEscudo" />{{ registro.equipeANome || "Equipe não disponível" }}</td>
+          </ng-container>
+          <ng-container matColumnDef="equipeBId">
+            <th mat-header-cell *matHeaderCellDef>Equipe B</th>
+            <td mat-cell *matCellDef="let registro"><app-escudo [codigo]="registro.equipeBEscudo" [corEscudo]="registro.equipeBCorEscudo" />{{ registro.equipeBNome || "Equipe não disponível" }}</td>
+          </ng-container>
+          <ng-container matColumnDef="dataHora">
+            <th mat-header-cell *matHeaderCellDef>Data e horário</th>
+            <td mat-cell *matCellDef="let registro">{{ registro.dataHora | date:'dd/MM/yyyy HH:mm' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="resultado">
+            <th mat-header-cell *matHeaderCellDef>Resultado</th>
+            <td mat-cell *matCellDef="let registro">{{ registro.placarEquipeA ?? '—' }} × {{ registro.placarEquipeB ?? '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let registro">{{ registro.status.replaceAll("_", " ") }}</td>
+          </ng-container>
+          <ng-container matColumnDef="acoes">
+            <th mat-header-cell *matHeaderCellDef>Ações</th>
+            <td mat-cell *matCellDef="let registro" class="acoes-tabela">
+              @if (auth.organizador) { <button mat-button (click)="consultar(registro)">Consultar</button> }
+ @if (auth.organizador) { <button mat-button (click)="partidaEstatisticas = registro">Estatísticas</button> }
+              @if (auth.organizador) { <button mat-button [disabled]="ocupado" (click)="editar(registro)">Editar</button> }
+              @if (auth.organizador) { <button mat-button class="excluir" [disabled]="ocupado" (click)="excluir(registro)">Excluir</button> }
+
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+          <tr mat-row *matRowDef="let registro; columns: colunas;"></tr>
+          <tr class="mat-row" *matNoDataRow><td class="vazio" [attr.colspan]="colunas.length">{{ carregando ? "Carregando…" : (falhouLista ? "Não foi possível carregar a lista." : "Nenhum registro encontrado.") }}</td></tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+@if (partidaEstatisticas && auth.organizador) {
+ <app-estatisticas [partida]="partidaEstatisticas" [torneio]="torneioDaPartida(partidaEstatisticas)" />
+}

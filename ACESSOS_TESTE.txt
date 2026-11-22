@@ -1,0 +1,19 @@
+E-SPORTS — ACESSOS PARA AVALIAÇÃO
+
+PERFIL 1 — ORGANIZADOR
+Login: [ORGANIZADOR]
+Senha: [admunifioengenharia]
+
+PERFIL 2 — USUÁRIO COMUM (CONSULTA)
+Login: [CONSULTA]
+Senha: [engsoftwareadmin]
+
+Observação: contas destinadas exclusivamente à demonstração do projeto acadêmico.
+
+PREENCHIMENTO PENDENTE
+Não foi confirmado que as credenciais atuais sejam exclusivas de demonstração,
+sem reutilização de senhas pessoais ou acesso à infraestrutura.
+Por isso, os campos acima são placeholders e não permitem autenticação.
+Preencher somente após a confirmação dos responsáveis, com os acessos do
+ambiente de avaliação. Não incluir senhas MySQL, tokens ou chaves privadas.
+Este arquivo não cria contas nem altera senhas do sistema.

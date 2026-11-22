@@ -1,0 +1,96 @@
+<div class="pagina">
+  <div class="pagina-intro">
+    <div><h2>Inscrições</h2></div>
+  </div>
+
+  <mat-card appearance="outlined">
+    <mat-card-header><mat-card-title>{{ consultando ? 'Consultar inscrição' : (idEmEdicao !== null ? 'Editar inscrição' : 'Cadastrar inscrição') }}</mat-card-title></mat-card-header>
+    <mat-card-content>
+      @if (!auth.organizador) { <p class="ajuda">Entre como organizador para cadastrar, editar ou excluir.</p> }
+      <form [formGroup]="formulario" (ngSubmit)="salvar()">
+        <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Equipe</mat-label>
+        <mat-select formControlName="equipeId">
+          @for (opcao of equipes; track opcao.id) {
+            <mat-option [value]="opcao.id">{{ opcao.nome }}</mat-option>
+          } @empty {
+            <mat-option disabled>Nenhuma opção disponível</mat-option>
+          }
+        </mat-select>
+        <mat-error>Preencha equipe corretamente.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Competição compatível</mat-label>
+        <mat-select formControlName="torneioId">
+          @for (opcao of competicoesCompativeis; track opcao.id) {
+            <mat-option [value]="opcao.id">{{ opcao.nome }}</mat-option>
+          } @empty {
+            <mat-option disabled>Nenhuma opção cadastrada</mat-option>
+          }
+        </mat-select>
+        <mat-error>Preencha torneio corretamente.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Data de inscrição</mat-label>
+        <input matInput type="date" formControlName="dataInscricao">
+        <mat-error>Preencha data de inscrição corretamente.</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="PENDENTE">PENDENTE</mat-option>
+          @if (idEmEdicao !== null) { <mat-option value="APROVADA">APROVADA</mat-option> }
+          @if (idEmEdicao !== null) { <mat-option value="REJEITADA">REJEITADA</mat-option> }
+        </mat-select>
+        <mat-error>Preencha status corretamente.</mat-error>
+      </mat-form-field>
+        </div>
+        <div class="acoes-form">
+          @if (!consultando && auth.organizador) { <button mat-flat-button type="submit" [disabled]="ocupado || (idEmEdicao === null && !!inscricaoAtual)">{{ idEmEdicao !== null ? 'Salvar alterações' : textoSolicitacao }}</button> }
+          <button mat-stroked-button type="button" (click)="cancelar()" [disabled]="ocupado">{{ idEmEdicao !== null ? 'Cancelar' : 'Limpar formulário' }}</button>
+        </div>
+      </form>
+      @if (mensagem) { <p class="aviso" role="status">{{ mensagem }}</p> }
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined">
+    <mat-card-header><mat-card-title>Lista de inscrições</mat-card-title></mat-card-header>
+    <mat-card-content>
+      <div class="tabela-scroll" tabindex="0" aria-label="Tabela de inscrições">
+        <table mat-table [dataSource]="registros">
+          <ng-container matColumnDef="equipeId">
+            <th mat-header-cell *matHeaderCellDef>Equipe</th>
+            <td mat-cell *matCellDef="let registro"><app-escudo [codigo]="escudoEquipe(registro.equipeId)" [corEscudo]="corEquipe(registro.equipeId)" />{{ nomeRelacionado(equipes, registro.equipeId) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="torneioId">
+            <th mat-header-cell *matHeaderCellDef>Torneio</th>
+            <td mat-cell *matCellDef="let registro">{{ nomeRelacionado(torneios, registro.torneioId) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="dataInscricao">
+            <th mat-header-cell *matHeaderCellDef>Data de inscrição</th>
+            <td mat-cell *matCellDef="let registro">{{ registro.dataInscricao | date:'dd/MM/yyyy' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let registro">{{ registro.status === "APROVADA" ? "INSCRITO" : (registro.status === "PENDENTE" ? "Aguardando aprovação" : "Inscrição rejeitada") }}</td>
+          </ng-container>
+          <ng-container matColumnDef="acoes">
+            <th mat-header-cell *matHeaderCellDef>Ações</th>
+            <td mat-cell *matCellDef="let registro" class="acoes-tabela">
+              <button mat-button (click)="consultar(registro)">Consultar</button>
+              @if (auth.organizador) { <button mat-button [disabled]="ocupado" (click)="editar(registro)">Editar</button> }
+              @if (auth.organizador) { <button mat-button class="excluir" [disabled]="ocupado" (click)="excluir(registro)">Excluir</button> }
+              @if (auth.organizador) { <button mat-button [disabled]="ocupado" (click)="alterarStatus(registro, 'APROVADA')">Aprovar</button> }
+              @if (auth.organizador) { <button mat-button [disabled]="ocupado" (click)="alterarStatus(registro, 'REJEITADA')">Rejeitar</button> }
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+          <tr mat-row *matRowDef="let registro; columns: colunas;"></tr>
+          <tr class="mat-row" *matNoDataRow><td class="vazio" [attr.colspan]="colunas.length">{{ carregando ? "Carregando…" : (falhouLista ? "Não foi possível carregar a lista." : "Nenhum registro encontrado.") }}</td></tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
