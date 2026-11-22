@@ -27,7 +27,11 @@ public class ConfiguracaoSeguranca {
     @Bean
     public CorsConfigurationSource configuracaoCors() {
         CorsConfiguration cors = new CorsConfiguration();
-        cors.setAllowedOrigins(List.of("http://localhost:4200", "http://127.0.0.1:4200"));
+        cors.setAllowedOrigins(List.of(
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    "https://e-sports-lyart.vercel.app"
+));
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         cors.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         cors.setMaxAge(3600L);
