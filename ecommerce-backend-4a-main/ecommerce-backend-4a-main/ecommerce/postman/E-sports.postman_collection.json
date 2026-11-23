@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "E-sports - Entrega PDW",
-    "description": "Execute as pastas em ordem com ambiente próprio de testes e credenciais locais. Cria registros fictícios, verifica HTTP e remove os registros criados. Não execute sobre IDs de registros pessoais. Erros esperados fazem parte dos testes.",
+    "description": "Coleção local de testes acadêmicos. Execute todas as pastas em ordem, em banco isolado. Bloqueia destinos externos, exige confirmação do banco e registra IDs criados. Não usar em Railway. Leia docs/testes/GUIA_POSTMAN.md. Requer Postman com pm.execution.skipRequest e redirecionamentos desativados.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -47,24 +47,33 @@
           },
           "event": [
             {
-              "listen": "prerequest",
+              "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.environment.set(\"prefixo\", \"POSTMAN_\" + Date.now());",
-                  "const hoje = new Intl.DateTimeFormat(\"en-CA\", {timeZone:\"America/Sao_Paulo\", year:\"numeric\", month:\"2-digit\", day:\"2-digit\"}).format(new Date());",
-                  "const partes = hoje.split(\"-\");",
-                  "const base = new Date(Date.UTC(Number(partes[0]), Number(partes[1])-1, Number(partes[2])));",
-                  "pm.environment.set(\"hoje\", base.toISOString().slice(0,10));",
-                  "base.setUTCDate(base.getUTCDate()+10); pm.environment.set(\"dataInicio\",base.toISOString().slice(0,10));",
-                  "base.setUTCDate(base.getUTCDate()+1); pm.environment.set(\"dataFim\",base.toISOString().slice(0,10));",
-                  "pm.environment.unset(\"modalidadeId\"); pm.collectionVariables.unset(\"criado_modalidadeId\");",
-                  "pm.environment.unset(\"torneioId\"); pm.collectionVariables.unset(\"criado_torneioId\");",
-                  "pm.environment.unset(\"equipeId\"); pm.collectionVariables.unset(\"criado_equipeId\");",
-                  "pm.environment.unset(\"atletaId\"); pm.collectionVariables.unset(\"criado_atletaId\");",
-                  "pm.environment.unset(\"inscricaoId\"); pm.collectionVariables.unset(\"criado_inscricaoId\");",
-                  "pm.environment.unset(\"partidaId\"); pm.collectionVariables.unset(\"criado_partidaId\");",
-                  "pm.environment.unset(\"equipeBId\"); pm.collectionVariables.unset(\"criado_equipeBId\");"
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Localizar Futsal sem alterar registros existentes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/modalidades"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             },
@@ -73,12 +82,53 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
-                  "if (pm.response.code === 201) { const id = pm.response.json().id; pm.environment.set(\"modalidadeId\", id); pm.collectionVariables.set(\"criado_modalidadeId\", String(id)); }"
+                  "if (pm.response.code === 200) {",
+                  " const m = pm.response.json().find(m => m.nome.trim().toLowerCase() === 'futsal');",
+                  " if (m) { const diario = JSON.parse(pm.collectionVariables.get('diario')); diario.futsalLeitura = String(m.id); pm.collectionVariables.set('diario', JSON.stringify(diario)); pm.environment.set('futsalId', String(m.id)); }",
+                  "}"
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Criar Futsal somente se ausente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{url}}/modalidades",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Futsal\",\n  \"descricao\": \"{{prefixo}} modalidade temporária\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Cadastrar torneios",
@@ -93,7 +143,7 @@
             "url": "{{url}}/torneios",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"{{prefixo}} Torneio\",\n  \"descricao\": \"Torneio fictício\",\n  \"dataInicio\": \"{{dataInicio}}\",\n  \"dataFim\": \"{{dataFim}}\",\n  \"prazoInscricao\": \"{{hoje}}\",\n  \"local\": \"Quadra fictícia\",\n  \"limiteEquipes\": 2,\n  \"modalidadeId\": {{modalidadeId}}\n}",
+              "raw": "{\n  \"nome\": \"{{prefixo}} Torneio\",\n  \"descricao\": \"Torneio fictício\",\n  \"dataInicio\": \"{{dataInicio}}\",\n  \"dataFim\": \"{{dataFim}}\",\n  \"prazoInscricao\": \"{{hoje}}\",\n  \"local\": \"Quadra fictícia\",\n  \"limiteEquipes\": 2,\n  \"modalidadeId\": {{futsalId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -108,12 +158,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
-                  "if (pm.response.code === 201) { const id = pm.response.json().id; pm.environment.set(\"torneioId\", id); pm.collectionVariables.set(\"criado_torneioId\", String(id)); }"
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });"
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Cadastrar equipes",
@@ -128,7 +180,7 @@
             "url": "{{url}}/equipes",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"{{prefixo}} Equipe A\",\n  \"cidade\": \"Cidade fictícia\",\n  \"nomeResponsavel\": \"Responsável fictício\",\n  \"modalidadeId\": {{modalidadeId}}\n}",
+              "raw": "{\n  \"nome\": \"{{prefixo}} Equipe A\",\n  \"escudo\": \"VERDE\",\n  \"corEscudo\": \"#3478F6\",\n  \"cidade\": \"Cidade fictícia\",\n  \"nomeResponsavel\": \"Responsável fictício\",\n  \"modalidadeId\": {{futsalId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -143,12 +195,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
-                  "if (pm.response.code === 201) { const id = pm.response.json().id; pm.environment.set(\"equipeId\", id); pm.collectionVariables.set(\"criado_equipeId\", String(id)); }"
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });"
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Cadastrar equipe B",
@@ -163,7 +217,7 @@
             "url": "{{url}}/equipes",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"{{prefixo}} Equipe B\",\n  \"cidade\": \"Cidade fictícia\",\n  \"nomeResponsavel\": \"Responsável fictício\",\n  \"modalidadeId\": {{modalidadeId}}\n}",
+              "raw": "{\n  \"nome\": \"{{prefixo}} Equipe B\",\n  \"escudo\": \"VERDE\",\n  \"corEscudo\": \"#3478F6\",\n  \"cidade\": \"Cidade fictícia\",\n  \"nomeResponsavel\": \"Responsável fictício\",\n  \"modalidadeId\": {{futsalId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -178,12 +232,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
-                  "if (pm.response.code === 201) { const id = pm.response.json().id; pm.environment.set(\"equipeBId\", id); pm.collectionVariables.set(\"criado_equipeBId\", String(id)); }"
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });"
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Cadastrar atletas",
@@ -213,12 +269,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
-                  "if (pm.response.code === 201) { const id = pm.response.json().id; pm.environment.set(\"atletaId\", id); pm.collectionVariables.set(\"criado_atletaId\", String(id)); }"
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });"
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Cadastrar inscricoes",
@@ -248,12 +306,158 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
-                  "if (pm.response.code === 201) { const id = pm.response.json().id; pm.environment.set(\"inscricaoId\", id); pm.collectionVariables.set(\"criado_inscricaoId\", String(id)); }"
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Inscrição inicia PENDENTE\", () => pm.expect(pm.response.json().status).to.eql(\"PENDENTE\"));"
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Inscrever equipe B pendente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{url}}/inscricoes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataInscricao\": \"{{hoje}}\",\n  \"status\": \"PENDENTE\",\n  \"torneioId\": {{torneioId}},\n  \"equipeId\": {{equipeBId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Inscrição inicia PENDENTE\", () => pm.expect(pm.response.json().status).to.eql(\"PENDENTE\"));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Aprovar equipe A antes da partida",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{url}}/inscricoes/{{inscricaoId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataInscricao\": \"{{hoje}}\",\n  \"status\": \"APROVADA\",\n  \"torneioId\": {{torneioId}},\n  \"equipeId\": {{equipeId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Inscrição aprovada\", () => pm.expect(pm.response.json().status).to.eql(\"APROVADA\"));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Aprovar equipe B antes da partida",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{url}}/inscricoes/{{inscricaoBId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataInscricao\": \"{{hoje}}\",\n  \"status\": \"APROVADA\",\n  \"torneioId\": {{torneioId}},\n  \"equipeId\": {{equipeBId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Inscrição aprovada\", () => pm.expect(pm.response.json().status).to.eql(\"APROVADA\"));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Cadastrar partidas",
@@ -283,12 +487,48 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
-                  "if (pm.response.code === 201) { const id = pm.response.json().id; pm.environment.set(\"partidaId\", id); pm.collectionVariables.set(\"criado_partidaId\", String(id)); }"
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });"
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Próxima partida pública antes do resultado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/torneios/{{torneioId}}/classificacao",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Uma próxima partida e nenhum resultado\", () => { pm.expect(pm.response.json().proximos.length).to.eql(1); pm.expect(pm.response.json().resultados.length).to.eql(0); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         }
       ]
     },
@@ -313,7 +553,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Buscar modalidades por ID",
@@ -333,7 +576,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Atualizar modalidades",
@@ -359,15 +605,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"modalidadeId\") || String(pm.environment.get(\"modalidadeId\")) !== pm.collectionVariables.get(\"criado_modalidadeId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -376,7 +613,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Listar torneios",
@@ -396,7 +636,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Buscar torneios por ID",
@@ -416,7 +659,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Atualizar torneios",
@@ -431,7 +677,7 @@
             "url": "{{url}}/torneios/{{torneioId}}",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"{{prefixo}} Torneio atualizado\",\n  \"descricao\": \"Torneio fictício\",\n  \"dataInicio\": \"{{dataInicio}}\",\n  \"dataFim\": \"{{dataFim}}\",\n  \"prazoInscricao\": \"{{hoje}}\",\n  \"local\": \"Quadra fictícia\",\n  \"limiteEquipes\": 2,\n  \"modalidadeId\": {{modalidadeId}}\n}",
+              "raw": "{\n  \"nome\": \"{{prefixo}} Torneio atualizado\",\n  \"descricao\": \"Torneio fictício\",\n  \"dataInicio\": \"{{dataInicio}}\",\n  \"dataFim\": \"{{dataFim}}\",\n  \"prazoInscricao\": \"{{hoje}}\",\n  \"local\": \"Quadra fictícia\",\n  \"limiteEquipes\": 2,\n  \"modalidadeId\": {{futsalId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -442,15 +688,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"torneioId\") || String(pm.environment.get(\"torneioId\")) !== pm.collectionVariables.get(\"criado_torneioId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -459,7 +696,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Listar equipes",
@@ -479,7 +719,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Buscar equipes por ID",
@@ -499,7 +742,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Atualizar equipes",
@@ -514,7 +760,7 @@
             "url": "{{url}}/equipes/{{equipeId}}",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"{{prefixo}} Equipe A atualizado\",\n  \"cidade\": \"Cidade fictícia\",\n  \"nomeResponsavel\": \"Responsável fictício\",\n  \"modalidadeId\": {{modalidadeId}}\n}",
+              "raw": "{\n  \"nome\": \"{{prefixo}} Equipe A atualizado\",\n  \"escudo\": \"VERDE\",\n  \"corEscudo\": \"#3478F6\",\n  \"cidade\": \"Cidade fictícia\",\n  \"nomeResponsavel\": \"Responsável fictício\",\n  \"modalidadeId\": {{futsalId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -525,15 +771,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"equipeId\") || String(pm.environment.get(\"equipeId\")) !== pm.collectionVariables.get(\"criado_equipeId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -542,7 +779,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Listar atletas",
@@ -562,7 +802,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Buscar atletas por ID",
@@ -582,7 +825,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Atualizar atletas",
@@ -608,15 +854,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"atletaId\") || String(pm.environment.get(\"atletaId\")) !== pm.collectionVariables.get(\"criado_atletaId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -625,7 +862,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Listar inscricoes",
@@ -645,7 +885,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Buscar inscricoes por ID",
@@ -665,7 +908,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Atualizar inscricoes",
@@ -691,15 +937,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"inscricaoId\") || String(pm.environment.get(\"inscricaoId\")) !== pm.collectionVariables.get(\"criado_inscricaoId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -708,7 +945,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Listar partidas",
@@ -728,7 +968,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Buscar partidas por ID",
@@ -748,7 +991,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Atualizar partidas",
@@ -763,7 +1009,7 @@
             "url": "{{url}}/partidas/{{partidaId}}",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"dataHora\": \"{{dataInicio}}T15:00:00\",\n  \"local\": \"Quadra fictícia\",\n  \"placarEquipeA\": 0,\n  \"placarEquipeB\": 2,\n  \"status\": \"FINALIZADA\",\n  \"torneioId\": {{torneioId}},\n  \"equipeAId\": {{equipeId}},\n  \"equipeBId\": {{equipeBId}}\n}",
+              "raw": "{\n  \"dataHora\": \"{{dataInicio}}T15:00:00\",\n  \"local\": \"Quadra fictícia\",\n  \"placarEquipeA\": 3,\n  \"placarEquipeB\": 1,\n  \"status\": \"FINALIZADA\",\n  \"torneioId\": {{torneioId}},\n  \"equipeAId\": {{equipeId}},\n  \"equipeBId\": {{equipeBId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -774,15 +1020,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"partidaId\") || String(pm.environment.get(\"partidaId\")) !== pm.collectionVariables.get(\"criado_partidaId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -791,7 +1028,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Inscrições por torneio",
@@ -811,7 +1051,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Partidas por torneio",
@@ -831,12 +1074,528 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         }
       ]
     },
     {
-      "name": "3 - Acesso público e CONSULTA",
+      "name": "3 - Participações, estatísticas e resultados",
+      "item": [
+        {
+          "name": "409 - estatística sem participação",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{url}}/estatisticas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"atletaId\": {{atletaId}},\n  \"partidaId\": {{partidaId}},\n  \"gols\": 2,\n  \"assistencias\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Cadastrar participação do atleta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{url}}/participacoes-atletas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"atletaId\": {{atletaId}},\n  \"equipeId\": {{equipeId}},\n  \"torneioId\": {{torneioId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Listar participações",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/participacoes-atletas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Participantes da partida",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/participacoes-atletas?partidaId={{partidaId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Atleta incluído entre participantes\", () => pm.expect(pm.response.json().some(p => String(p.atletaId) === String(pm.environment.get(\"atletaId\")))).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "409 - participação duplicada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{url}}/participacoes-atletas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"atletaId\": {{atletaId}},\n  \"equipeId\": {{equipeId}},\n  \"torneioId\": {{torneioId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "400 - abates incompatíveis com Futsal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{url}}/estatisticas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"atletaId\": {{atletaId}},\n  \"partidaId\": {{partidaId}},\n  \"gols\": 2,\n  \"assistencias\": 1,\n  \"abates\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Cadastrar estatística de Futsal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{url}}/estatisticas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"atletaId\": {{atletaId}},\n  \"partidaId\": {{partidaId}},\n  \"gols\": 2,\n  \"assistencias\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Listar estatísticas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/estatisticas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Estatísticas da partida",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/estatisticas?partidaId={{partidaId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estatística persistida\", () => pm.expect(pm.response.json().some(e => String(e.id) === String(pm.environment.get(\"estatisticaId\")) && e.gols === 2)).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Consultar estatística por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/estatisticas/{{estatisticaId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "409 - estatística duplicada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{url}}/estatisticas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"atletaId\": {{atletaId}},\n  \"partidaId\": {{partidaId}},\n  \"gols\": 2,\n  \"assistencias\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "409 - participação com estatística",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{url}}/participacoes-atletas/{{participacaoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Desempenho acumulado do atleta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/atletas/{{atletaId}}/desempenho"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Totais e histórico separados por competição', () => {",
+                  " const g = pm.response.json().competicoes.find(g => String(g.torneioId) === String(pm.environment.get('torneioId')));",
+                  " pm.expect(g.totais.gols).to.eql(2); pm.expect(g.totais.assistencias).to.eql(1); pm.expect(g.partidasComEstatisticas).to.eql(1); pm.expect(g.historico.length).to.eql(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Classificação e resultados públicos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/torneios/{{torneioId}}/classificacao",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resultado 3 a 1 e classificação de Futsal', () => {",
+                  " const d=pm.response.json(); pm.expect(d.disponivel).to.eql(true); pm.expect(d.resultados.length).to.eql(1); pm.expect(d.proximos.length).to.eql(0);",
+                  " const a=d.classificacao.find(e => String(e.equipeId) === String(pm.environment.get('equipeId')));",
+                  " pm.expect(a.pontos).to.eql(3); pm.expect(a.vitorias).to.eql(1); pm.expect(a.corEscudo).to.eql('#3478F6'); pm.expect(a.equipe).to.include(pm.environment.get('prefixo'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Indicadores públicos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/torneios/indicadores",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Gerar sem duplicar confronto existente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{url}}/partidas/torneio/{{torneioId}}/gerar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"inicio\": \"{{dataInicio}}T15:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Nenhuma duplicata gerada\", () => pm.expect(pm.response.json()).to.eql([]));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "4 - Acesso público e CONSULTA",
       "item": [
         {
           "name": "GET público modalidades",
@@ -859,7 +1618,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "GET público torneios",
@@ -882,7 +1644,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "GET público partidas",
@@ -905,7 +1670,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "CONSULTA pode ler equipes",
@@ -940,12 +1708,15 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         }
       ]
     },
     {
-      "name": "4 - Erros esperados",
+      "name": "5 - Erros esperados",
       "item": [
         {
           "name": "400 - nome vazio",
@@ -979,7 +1750,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "400 - equipes iguais",
@@ -1013,7 +1787,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "400 - placar negativo",
@@ -1047,7 +1824,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "400 - finalização sem placares",
@@ -1081,7 +1861,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "401 - rota protegida sem autenticação",
@@ -1104,7 +1887,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "403 - CONSULTA tenta cadastrar",
@@ -1153,7 +1939,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "404 - registro inexistente",
@@ -1173,7 +1962,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "409 - inscrição duplicada",
@@ -1207,7 +1999,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "409 - torneio possui partida",
@@ -1219,15 +2014,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"torneioId\") || String(pm.environment.get(\"torneioId\")) !== pm.collectionVariables.get(\"criado_torneioId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -1236,13 +2022,296 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "403 - CONSULTA tenta editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{url}}/equipes/{{equipeId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{prefixo}} Equipe A atualizado\",\n  \"escudo\": \"VERDE\",\n  \"corEscudo\": \"#3478F6\",\n  \"cidade\": \"Cidade fictícia\",\n  \"nomeResponsavel\": \"Responsável fictício\",\n  \"modalidadeId\": {{futsalId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{usuarioConsulta}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senhaConsulta}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "403 - CONSULTA tenta excluir",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{url}}/equipes/{{equipeBId}}",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{usuarioConsulta}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senhaConsulta}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "403 - CONSULTA não acessa atletas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/atletas",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{usuarioConsulta}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senhaConsulta}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "403 - CONSULTA não acessa participacoes-atletas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/participacoes-atletas",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{usuarioConsulta}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senhaConsulta}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "403 - CONSULTA não acessa estatisticas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/estatisticas",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{usuarioConsulta}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senhaConsulta}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "403 - CONSULTA não acessa inscricoes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/inscricoes",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{usuarioConsulta}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senhaConsulta}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         }
       ]
     },
     {
-      "name": "5 - Excluir apenas fictícios",
+      "name": "6 - Excluir apenas fictícios",
       "item": [
+        {
+          "name": "Excluir estatística fictícia",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{url}}/estatisticas/{{estatisticaId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Excluir participação fictícia",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{url}}/participacoes-atletas/{{participacaoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
         {
           "name": "Excluir fictício partidas",
           "request": {
@@ -1253,15 +2322,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"partidaId\") || String(pm.environment.get(\"partidaId\")) !== pm.collectionVariables.get(\"criado_partidaId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -1270,7 +2330,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Excluir fictício inscricoes",
@@ -1282,15 +2345,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"inscricaoId\") || String(pm.environment.get(\"inscricaoId\")) !== pm.collectionVariables.get(\"criado_inscricaoId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -1299,7 +2353,32 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Excluir inscrição B fictícia",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{url}}/inscricoes/{{inscricaoBId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Excluir fictício atletas",
@@ -1311,15 +2390,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"atletaId\") || String(pm.environment.get(\"atletaId\")) !== pm.collectionVariables.get(\"criado_atletaId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -1328,7 +2398,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Excluir fictício equipes",
@@ -1340,15 +2413,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"equipeId\") || String(pm.environment.get(\"equipeId\")) !== pm.collectionVariables.get(\"criado_equipeId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -1357,7 +2421,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Excluir equipe B fictícia",
@@ -1369,15 +2436,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"equipeBId\") || String(pm.environment.get(\"equipeBId\")) !== pm.collectionVariables.get(\"criado_equipeBId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -1386,7 +2444,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Excluir fictício torneios",
@@ -1398,15 +2459,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"torneioId\") || String(pm.environment.get(\"torneioId\")) !== pm.collectionVariables.get(\"criado_torneioId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -1415,7 +2467,10 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         },
         {
           "name": "Excluir fictício modalidades",
@@ -1427,15 +2482,6 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.environment.get(\"modalidadeId\") || String(pm.environment.get(\"modalidadeId\")) !== pm.collectionVariables.get(\"criado_modalidadeId\")) { throw new Error(\"Execute primeiro o cadastro fictício desta coleção. Operação bloqueada.\"); }"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -1444,9 +2490,150 @@
                 ]
               }
             }
-          ]
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Excluir Futsal somente se criado nesta execução",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{url}}/modalidades/{{futsalId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Conferir limpeza da execução",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{url}}/modalidades"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Nenhum ID temporário pendente', () => pm.expect(JSON.parse(pm.collectionVariables.get('diario')).registros).to.eql([]));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
         }
       ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const regras = {\"Cadastrar modalidades\": {\"salvar\": \"modalidadeId\"}, \"Cadastrar torneios\": {\"salvar\": \"torneioId\"}, \"Cadastrar equipes\": {\"salvar\": \"equipeId\"}, \"Cadastrar equipe B\": {\"salvar\": \"equipeBId\"}, \"Cadastrar atletas\": {\"salvar\": \"atletaId\"}, \"Cadastrar inscricoes\": {\"salvar\": \"inscricaoId\"}, \"Cadastrar partidas\": {\"salvar\": \"partidaId\"}, \"Criar Futsal somente se ausente\": {\"salvar\": \"futsalId\", \"condicional\": \"futsal\"}, \"Inscrever equipe B pendente\": {\"salvar\": \"inscricaoBId\"}, \"Cadastrar participação do atleta\": {\"salvar\": \"participacaoId\"}, \"Cadastrar estatística de Futsal\": {\"salvar\": \"estatisticaId\"}, \"Excluir Futsal somente se criado nesta execução\": {\"condicional\": \"limparFutsal\", \"limpeza\": true}, \"Excluir estatística fictícia\": {\"limpeza\": true}, \"Excluir participação fictícia\": {\"limpeza\": true}, \"Excluir fictício partidas\": {\"limpeza\": true}, \"Excluir fictício inscricoes\": {\"limpeza\": true}, \"Excluir inscrição B fictícia\": {\"limpeza\": true}, \"Excluir fictício atletas\": {\"limpeza\": true}, \"Excluir fictício equipes\": {\"limpeza\": true}, \"Excluir equipe B fictícia\": {\"limpeza\": true}, \"Excluir fictício torneios\": {\"limpeza\": true}, \"Excluir fictício modalidades\": {\"limpeza\": true}};",
+          "function bloquear(mensagem) { pm.execution.skipRequest(); throw new Error(mensagem); }",
+          "const url = pm.environment.get('url');",
+          "if (!/^http:\\/\\/(localhost|127\\.0\\.0\\.1):[0-9]{2,5}$/.test(url || '')) bloquear('Use somente API local, sem caminho ou redirecionamento.');",
+          "if (pm.environment.get('bancoIsoladoConfirmado') !== 'CONFIRMO_BANCO_ISOLADO') bloquear('Confirme manualmente que a API local aponta para banco isolado.');",
+          "const nome=pm.info.requestName, regra=regras[nome] || {};",
+          "let diario=JSON.parse(pm.collectionVariables.get('diario') || 'null');",
+          "if (nome === 'Cadastrar modalidades') {",
+          " if (diario && diario.registros.length) bloquear('Há registros pendentes. Faça a limpeza da execução anterior antes de reiniciar.');",
+          " const prefixo='TESTE_POSTMAN_'+Date.now();",
+          " diario={url, prefixo, registros:[], futsalLeitura:null};",
+          " pm.environment.set('prefixo',prefixo); pm.environment.unset('futsalId');",
+          " const hoje=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());",
+          " pm.environment.set('hoje',hoje);",
+          " const data=new Date(hoje+'T12:00:00Z'); data.setUTCDate(data.getUTCDate()+10); pm.environment.set('dataInicio',data.toISOString().slice(0,10));",
+          " data.setUTCDate(data.getUTCDate()+1); pm.environment.set('dataFim',data.toISOString().slice(0,10));",
+          " pm.collectionVariables.set('diario',JSON.stringify(diario));",
+          "}",
+          "if (!diario || diario.url !== url || diario.prefixo !== pm.environment.get('prefixo')) bloquear('Execute a coleção desde o início, sem trocar de ambiente.');",
+          "if (regra.condicional === 'futsal' && diario.futsalLeitura) { pm.execution.skipRequest(); }",
+          "else {",
+          " const modelo=pm.request.url.toString();",
+          " const alvo=modelo.match(/\\{\\{(\\w+Id)\\}\\}$/)?.[1];",
+          " const registro=diario.registros.find(r => r.chave === alvo && r.id === String(pm.environment.get(alvo)));",
+          " if (regra.limpeza && !registro) { pm.execution.skipRequest(); }",
+          " else {",
+          "  const texto=modelo+' '+(pm.request.body?.raw || '');",
+          "  for (const m of texto.matchAll(/\\{\\{(\\w+Id)\\}\\}/g)) {",
+          "   const chave=m[1], id=String(pm.environment.get(chave));",
+          "   const proprio=diario.registros.some(r => r.chave === chave && r.id === id);",
+          "   const leitura=chave === 'futsalId' && diario.futsalLeitura === id;",
+          "   if (!proprio && !leitura) bloquear('ID não pertence a esta execução: '+chave);",
+          "  }",
+          "  if (['PUT','DELETE'].includes(pm.request.method) && !registro) bloquear('Alteração/exclusão exige ID criado pelos testes.');",
+          "  // Evita variáveis globais/locais ou arquivos de dados sobrepondo o ambiente validado.",
+          "  for (const m of texto.matchAll(/\\{\\{(\\w+)\\}\\}/g)) {",
+          "   if (String(pm.variables.get(m[1])) !== String(pm.environment.get(m[1]))) bloquear('Variável sobreposta: '+m[1]);",
+          "  }",
+          "  if (!modelo.startsWith('{{url}}/')) bloquear('URL fora do padrão local.');",
+          " }",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const diario=JSON.parse(pm.collectionVariables.get('diario') || 'null');",
+          "if (diario) {",
+          " const caminho=pm.request.url.toString().replace('{{url}}','').split('?')[0];",
+          " const recurso=caminho.split('/')[1];",
+          " const chave={\"Cadastrar modalidades\": {\"salvar\": \"modalidadeId\"}, \"Cadastrar torneios\": {\"salvar\": \"torneioId\"}, \"Cadastrar equipes\": {\"salvar\": \"equipeId\"}, \"Cadastrar equipe B\": {\"salvar\": \"equipeBId\"}, \"Cadastrar atletas\": {\"salvar\": \"atletaId\"}, \"Cadastrar inscricoes\": {\"salvar\": \"inscricaoId\"}, \"Cadastrar partidas\": {\"salvar\": \"partidaId\"}, \"Criar Futsal somente se ausente\": {\"salvar\": \"futsalId\", \"condicional\": \"futsal\"}, \"Inscrever equipe B pendente\": {\"salvar\": \"inscricaoBId\"}, \"Cadastrar participação do atleta\": {\"salvar\": \"participacaoId\"}, \"Cadastrar estatística de Futsal\": {\"salvar\": \"estatisticaId\"}, \"Excluir Futsal somente se criado nesta execução\": {\"condicional\": \"limparFutsal\", \"limpeza\": true}, \"Excluir estatística fictícia\": {\"limpeza\": true}, \"Excluir participação fictícia\": {\"limpeza\": true}, \"Excluir fictício partidas\": {\"limpeza\": true}, \"Excluir fictício inscricoes\": {\"limpeza\": true}, \"Excluir inscrição B fictícia\": {\"limpeza\": true}, \"Excluir fictício atletas\": {\"limpeza\": true}, \"Excluir fictício equipes\": {\"limpeza\": true}, \"Excluir equipe B fictícia\": {\"limpeza\": true}, \"Excluir fictício torneios\": {\"limpeza\": true}, \"Excluir fictício modalidades\": {\"limpeza\": true}}[pm.info.requestName]?.salvar;",
+          " // Registra também criações inesperadas em testes negativos, sem perder IDs.",
+          " if (pm.request.method === 'POST' && pm.response.code === 201) {",
+          "  const id=String(pm.response.json().id);",
+          "  if (/^[1-9][0-9]*$/.test(id)) {",
+          "   const nome=chave || ('inesperado_'+recurso+'_'+id);",
+          "   diario.registros.push({recurso,id,chave:nome}); pm.environment.set(nome,id);",
+          "  }",
+          " }",
+          " if (pm.request.method === 'POST' && caminho.endsWith('/gerar') && pm.response.code === 200) {",
+          "  for (const p of pm.response.json()) {",
+          "   const id=String(p.id); const nome='gerada_'+id;",
+          "   diario.registros.push({recurso:'partidas',id,chave:nome}); pm.environment.set(nome,id);",
+          "  }",
+          " }",
+          " if (pm.request.method === 'DELETE' && pm.response.code === 204) {",
+          "  const chaveAlvo=caminho.match(/\\{\\{(\\w+Id)\\}\\}$/)?.[1];",
+          "  const id=String(pm.environment.get(chaveAlvo));",
+          "  diario.registros=diario.registros.filter(r => !(r.recurso === recurso && r.id === id));",
+          " }",
+          " pm.collectionVariables.set('diario',JSON.stringify(diario));",
+          "}"
+        ]
+      }
     }
   ]
 }

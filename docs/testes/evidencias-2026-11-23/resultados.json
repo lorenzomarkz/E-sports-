@@ -1,0 +1,98 @@
+{
+  "data": "2026-11-23",
+  "backend": {
+    "comando": "mvnw.cmd test",
+    "resultado": "BUILD SUCCESS",
+    "suites": [
+      {
+        "classe": "br.edu.unifio.ecommerce.servicos.AtletaParticipacaoTests",
+        "testes": 2,
+        "falhas": 0,
+        "erros": 0,
+        "ignorados": 0
+      },
+      {
+        "classe": "br.edu.unifio.ecommerce.servicos.ClassificacaoServicoTests",
+        "testes": 14,
+        "falhas": 0,
+        "erros": 0,
+        "ignorados": 0
+      },
+      {
+        "classe": "br.edu.unifio.ecommerce.servicos.DesempenhoAtletaTests",
+        "testes": 16,
+        "falhas": 0,
+        "erros": 0,
+        "ignorados": 0
+      },
+      {
+        "classe": "br.edu.unifio.ecommerce.servicos.EquipeEscudoTests",
+        "testes": 22,
+        "falhas": 0,
+        "erros": 0,
+        "ignorados": 0
+      },
+      {
+        "classe": "br.edu.unifio.ecommerce.servicos.EstatisticaAtletaServicoTests",
+        "testes": 18,
+        "falhas": 0,
+        "erros": 0,
+        "ignorados": 0
+      },
+      {
+        "classe": "br.edu.unifio.ecommerce.servicos.GeracaoPartidasServicoTests",
+        "testes": 9,
+        "falhas": 0,
+        "erros": 0,
+        "ignorados": 0
+      },
+      {
+        "classe": "br.edu.unifio.ecommerce.servicos.InscricaoServicoTests",
+        "testes": 10,
+        "falhas": 0,
+        "erros": 0,
+        "ignorados": 0
+      },
+      {
+        "classe": "br.edu.unifio.ecommerce.servicos.ParticipacaoAtletaServicoTests",
+        "testes": 10,
+        "falhas": 0,
+        "erros": 0,
+        "ignorados": 0
+      },
+      {
+        "classe": "br.edu.unifio.ecommerce.servicos.PartidaServicoTests",
+        "testes": 9,
+        "falhas": 0,
+        "erros": 0,
+        "ignorados": 0
+      },
+      {
+        "classe": "br.edu.unifio.ecommerce.servicos.RegrasEsportivasTests",
+        "testes": 10,
+        "falhas": 0,
+        "erros": 0,
+        "ignorados": 0
+      },
+      {
+        "classe": "br.edu.unifio.ecommerce.servicos.TorneioServicoTests",
+        "testes": 5,
+        "falhas": 0,
+        "erros": 0,
+        "ignorados": 0
+      }
+    ],
+    "total": 125
+  },
+  "frontend": {
+    "comando": "npm.cmd test -- --watch=false",
+    "aprovados": 58,
+    "reprovados": 0,
+    "arquivos": 1,
+    "origem": "Saída real do Angular/Vitest nesta execução; HTTP simulado por HttpTestingController."
+  },
+  "postman_http": {
+    "executado": false,
+    "motivo": "Não foi confirmado banco local isolado; nenhum teste HTTP enviado ao Railway."
+  }
+}

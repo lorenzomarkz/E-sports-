@@ -1,0 +1,124 @@
+TAP version 13
+# Subtest: JSON importável, 80 requisições e scripts JavaScript válidos
+ok 1 - JSON importável, 80 requisições e scripts JavaScript válidos
+  ---
+  duration_ms: 2.233
+  type: 'test'
+  ...
+# Subtest: Ambiente sem credenciais e confirmação desabilitada
+ok 2 - Ambiente sem credenciais e confirmação desabilitada
+  ---
+  duration_ms: 0.1623
+  type: 'test'
+  ...
+# Subtest: Bloqueia destino: https://e-sports-production-b1636b75.up.railway.app
+ok 3 - Bloqueia destino: https://e-sports-production-b1636b75.up.railway.app
+  ---
+  duration_ms: 1.3057
+  type: 'test'
+  ...
+# Subtest: Bloqueia destino: https://example.org
+ok 4 - Bloqueia destino: https://example.org
+  ---
+  duration_ms: 0.8416
+  type: 'test'
+  ...
+# Subtest: Bloqueia destino: http://localhost:8080@evil.org
+ok 5 - Bloqueia destino: http://localhost:8080@evil.org
+  ---
+  duration_ms: 0.8101
+  type: 'test'
+  ...
+# Subtest: Bloqueia destino: http://localhost:8080/api
+ok 6 - Bloqueia destino: http://localhost:8080/api
+  ---
+  duration_ms: 1.3116
+  type: 'test'
+  ...
+# Subtest: Bloqueia destino: http://127.0.0.1.evil.org:8080
+ok 7 - Bloqueia destino: http://127.0.0.1.evil.org:8080
+  ---
+  duration_ms: 0.6598
+  type: 'test'
+  ...
+# Subtest: Exige confirmação de banco isolado
+ok 8 - Exige confirmação de banco isolado
+  ---
+  duration_ms: 0.6792
+  type: 'test'
+  ...
+# Subtest: Bloqueia troca de servidor durante execução
+ok 9 - Bloqueia troca de servidor durante execução
+  ---
+  duration_ms: 0.7166
+  type: 'test'
+  ...
+# Subtest: Bloqueia ID de outro registro
+ok 10 - Bloqueia ID de outro registro
+  ---
+  duration_ms: 0.9063
+  type: 'test'
+  ...
+# Subtest: Permite excluir somente ID registrado como criado
+ok 11 - Permite excluir somente ID registrado como criado
+  ---
+  duration_ms: 0.7875
+  type: 'test'
+  ...
+# Subtest: Bloqueia variáveis sobrepostas por arquivo de dados
+ok 12 - Bloqueia variáveis sobrepostas por arquivo de dados
+  ---
+  duration_ms: 0.8057
+  type: 'test'
+  ...
+# Subtest: Não reinicia com limpeza pendente
+ok 13 - Não reinicia com limpeza pendente
+  ---
+  duration_ms: 0.6423
+  type: 'test'
+  ...
+# Subtest: Inicia nova execução somente com diário vazio
+ok 14 - Inicia nova execução somente com diário vazio
+  ---
+  duration_ms: 17.21
+  type: 'test'
+  ...
+# Subtest: Futsal preexistente não é criado novamente nem excluído
+ok 15 - Futsal preexistente não é criado novamente nem excluído
+  ---
+  duration_ms: 1.5109
+  type: 'test'
+  ...
+# Subtest: Registra ID retornado por criação bem-sucedida
+ok 16 - Registra ID retornado por criação bem-sucedida
+  ---
+  duration_ms: 0.8999
+  type: 'test'
+  ...
+# Subtest: Registra criação inesperada em teste negativo
+ok 17 - Registra criação inesperada em teste negativo
+  ---
+  duration_ms: 0.6641
+  type: 'test'
+  ...
+# Subtest: Exclusão confirmada remove somente o ID correto do diário
+ok 18 - Exclusão confirmada remove somente o ID correto do diário
+  ---
+  duration_ms: 0.5858
+  type: 'test'
+  ...
+# Subtest: Falha na exclusão mantém o ID para recuperação
+ok 19 - Falha na exclusão mantém o ID para recuperação
+  ---
+  duration_ms: 0.5517
+  type: 'test'
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 125.0991

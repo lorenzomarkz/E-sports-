@@ -1,0 +1,8 @@
+Trecho da saída real de npm.cmd test -- --watch=false em 23/11/2026. Caminho pessoal omitido.
+
+RUN v4.1.12
+Test Files  1 passed (1)
+Tests  58 passed (58)
+Start at  12:35:42
+Duration  7.16s (transform 313ms, setup 524ms, import 845ms, tests 2.15s, environment 3.15s)
+Exit code: 0
