@@ -1,5 +1,3 @@
-<img width="2557" height="1437" alt="image" src="https://github.com/user-attachments/assets/8de76f64-314c-4bb8-8d3d-86139c0f0b7a" /># E-sports
-
 O E-sports é um sistema acadêmico para organizar competições esportivas e acompanhar equipes, inscrições, partidas e resultados. O objetivo é aplicar os conhecimentos de desenvolvimento web em uma aplicação com frontend Angular, API REST e banco de dados MySQL.
 
 O projeto foi desenvolvido para **Padrões de Desenvolvimento Web** e **Projeto Integrador**, do **4º semestre de Engenharia de Software**.
