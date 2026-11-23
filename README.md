@@ -18,7 +18,6 @@ Repositório de destino: [lorenzomarkz/E-sports-](https://github.com/lorenzomark
 - Dashboard com classificação, próximos jogos e três KPIs: competições dentro do período cadastrado, equipes distintas com inscrição aprovada e partidas finalizadas. Indicadores atualizados a cada 30 segundos.
 - ORGANIZADOR administra o sistema; CONSULTA acompanha competições, equipes, partidas e classificação.
 
-Free Fire não possui classificação específica nesta etapa. Mortes não existem no modelo de estatísticas atual. Participações de atletas antigos não são atribuídas automaticamente.
 
 ## Tecnologias utilizadas
 
