@@ -1,10 +1,28 @@
-# E-sports
+<img width="2557" height="1437" alt="image" src="https://github.com/user-attachments/assets/8de76f64-314c-4bb8-8d3d-86139c0f0b7a" /># E-sports
 
 O E-sports é um sistema acadêmico para organizar competições esportivas e acompanhar equipes, inscrições, partidas e resultados. O objetivo é aplicar os conhecimentos de desenvolvimento web em uma aplicação com frontend Angular, API REST e banco de dados MySQL.
 
 O projeto foi desenvolvido para **Padrões de Desenvolvimento Web** e **Projeto Integrador**, do **4º semestre de Engenharia de Software**.
 
 Repositório de destino: [lorenzomarkz/E-sports-](https://github.com/lorenzomarkz/E-sports-).
+
+## Aplicação publicada
+
+O sistema E-sports está disponível na internet para avaliação das disciplinas Padrões de Desenvolvimento Web e Projeto Integrador.
+
+- **Frontend (Angular / Vercel):** https://e-sports-lyart.vercel.app
+- **Backend (Spring Boot / Railway):** https://e-sports-production-b1636b75.up.railway.app
+- **Banco de dados:** MySQL hospedado no Railway.
+
+O sistema pode ser acessado pelo navegador, sem necessidade de executar o projeto localmente.
+
+Perfis disponíveis:
+- **ORGANIZADOR:** gerencia os cadastros e as competições.
+- **CONSULTA:** visualiza as informações permitidas.
+
+As credenciais de teste serão fornecidas aos professores de forma privada.
+
+As instruções com `localhost` neste README servem para execução e testes locais.
 
 ## Funcionalidades implementadas
 
@@ -66,7 +84,7 @@ Visitantes sem login podem acessar as informações públicas de torneios, modal
 
 A autenticação usa HTTP Basic. Os logins definidos no código são `ORGANIZADOR` e `CONSULTA`, com senhas configuradas por variáveis de ambiente e codificadas com BCrypt no backend. O frontend mantém as credenciais em memória, sem localStorage. As proteções do backend continuam valendo para requisições diretas.
 
-### Credenciais para os professores
+### Credenciais para os professores ⚠️⚠️⚠️⚠️⚠️ 
 
 O arquivo destinado às credenciais de demonstração é [ACESSOS_TESTE.txt](ACESSOS_TESTE.txt).
 
